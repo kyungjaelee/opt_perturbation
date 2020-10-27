@@ -11,7 +11,7 @@ python3 -m multi_armed_bandit.run_grid_search --noise pareto --moment 1.1 --scal
 * --gap: 0.1 (fixed)
 * --samples: 30000 (fixed)
 * --arms: 100 (fixed)
-* --algo: ape-pareto (change this to run different algorithms such as 'ucb-truncated-mean', 'ucb-catoni-mean', and 'ucb-median-of-mean')
+* --algo: ape-pareto (change this variable to run different algorithms such as 'ucb-truncated-mean', 'ucb-catoni-mean', and 'ucb-median-of-mean')
 * --seed: 1 (set any seed between 1 ~ 20)
 2. Multiple runs with shell script
 ```
