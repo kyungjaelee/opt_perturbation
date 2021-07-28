@@ -2,49 +2,49 @@ import numpy as np
 from scipy.stats import invweibull
 from scipy.special import gamma
 
-# Generate noisy observations
-def weibull_observation(mean, scale, alpha):        
-    return weibull_noise(alpha)*scale + mean
-
-def frechet_observation(mean, scale, alpha):        
-    return frechet_noise(alpha)*scale + mean
-
-def both_side_frechet_observation(mean, scale, alpha):        
-    return both_side_frechet_noise(alpha)*scale + mean
-
-def pareto_observation(mean, scale, alpha):
-    return pareto_noise(alpha)*scale + mean
-
-def both_side_pareto_observation(mean, scale, alpha):
-    return both_side_pareto_noise(alpha)*scale + mean
-
-def gaussian_observation(mean, scale):
-    return gaussian_noise()*scale + mean
-
-# mean zero Noise functions by shifting an original R.V.
-def weibull_noise(alpha):        
-    return (np.random.weibull(alpha) - gamma(1+1/alpha))
-
-def frechet_noise(alpha):        
-    return (invweibull.rvs(alpha,scale=scale) - gamma(1-1/alpha))
-
-def pareto_noise(alpha):
-    return (np.random.pareto(alpha) - 1./(alpha-1))
-
-def gaussian_noise():
-    return np.random.normal()
-
-# Extend one sided noise to two sided noise by flipping its sign with probability 1/2
-def both_side_frechet_noise(alpha):        
-    side_variable = np.random.choice(2)
-    if side_variable==0:
-        return invweibull.rvs(alpha,scale=scale)
-    else:
-        return -invweibull.rvs(alpha,scale=scale)
+class NoiseModel():
+    def __init__(self,alpha=1.1, scale=1.):
+        self.alpha=1.1
+        self.scale=1.
     
-def both_side_pareto_noise(alpha):
-    side_variable = np.random.choice(2)
-    if side_variable==0:
-        return np.random.pareto(alpha) + 1
-    else:
-        return -np.random.pareto(alpha) - 1
+class ParetoNoise(NoiseModel):
+    def __init__(self,alpha=1.6, scale=1.,p=1.5, both_side=False):
+        NoiseModel.__init__(self,alpha,scale)
+        self.p = p
+        self.mean = scale*alpha/(alpha-1.)
+        self.nu_p = (scale**p)*alpha/(alpha-p)
+        self.both_side = both_side
+        
+    def sample(self):
+        if not self.both_side or np.random.uniform() > 0.5:
+            return self.scale*np.random.pareto(self.alpha) - self.mean
+        else:
+            return -self.scale*np.random.pareto(self.alpha) + self.mean
+
+class WeibullNoise(NoiseModel):
+    def __init__(self,alpha=1.6, scale=1.,p=1.5, both_side=False):
+        NoiseModel.__init__(self,alpha,scale)
+        self.p = p
+        self.mean = scale*gamma(1.+1./self.alpha)
+        self.nu_p = (scale**p)*gamma(1.+p/alpha)
+        self.both_side = both_side
+
+    def sample(self):
+        if not self.both_side or np.random.uniform() > 0.5:
+            return self.scale*np.random.weibull(self.alpha) - self.mean
+        else:
+            return -self.scale*np.random.weibull(self.alpha) + self.mean
+        
+class FrechetNoise(NoiseModel):
+    def __init__(self,alpha=1.6, scale=1.,p=1.5, both_side=False):
+        NoiseModel.__init__(self,alpha,scale)
+        self.p = p
+        self.mean = scale*gamma(1.-1./alpha)
+        self.nu_p = (scale**p)*gamma(1.-p/alpha)
+        self.both_side = both_side
+
+    def sample(self):
+        if not self.both_side or np.random.uniform() > 0.5:
+            return self.scale*invweibull.rvs(self.alpha,scale=1.) - self.mean
+        else:
+            return -self.scale*invweibull.rvs(self.alpha,scale=1.) + self.mean

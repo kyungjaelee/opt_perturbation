@@ -1,23 +1,24 @@
 import numpy as np
 from scipy.special import gamma
-from estimation.heavy_tail_observations import weibull_noise, frechet_noise, pareto_noise, gaussian_noise
+from estimation.heavy_tail_observations import WeibullNoise, FrechetNoise, ParetoNoise
 
 class Rewards():
-    def __init__(self,means,p,scale,noise_type='pareto'):
+    def __init__(self,means,p,scale,noise_type='pareto',both_side=False):
         self.K = len(means)
         self.means = means
         self.scale = scale
         if noise_type == 'weibull':
-            self.alpha = p
-            self.nu = (scale0 + np.abs(np.max(means)-scale*gamma(1.+1./self.alpha)))**p
-            self.noise_generator = lambda: weibull_noise(self.alpha)
+            weibull_noise = WeibullNoise(alpha=p, scale=scale,p=p, both_side=both_side)
+            self.nu = np.max((weibull_noise.nu_p**(1./p) + np.abs(means - weibull_noise.mean))**p)
+            self.noise_generator = lambda : weibull_noise.sample()
         elif noise_type == 'frechet':
-            self.alpha = p+0.05
-            self.nu = (scale*gamma(1.-p/self.alpha)**(1./p) + np.abs(np.max(means)-scale*gamma(1.-1./self.alpha)))**p
-            self.noise_generator = lambda: frechet_noise(self.alpha)
+            frechet_noise = FrechetNoise(alpha=p+0.05, scale=scale, p=p, both_side=both_side)
+            self.nu = np.max((frechet_noise.nu_p**(1./p) + np.abs(means - frechet_noise.mean))**p)
+            self.noise_generator = lambda : frechet_noise.sample()
         elif noise_type == 'pareto':
-            self.alpha = p+0.05
-            self.nu = (scale**(self.alpha/p)*(self.alpha/(self.alpha-p))**(1./p) + np.abs(np.max(means)-scale*self.alpha/(self.alpha-1.)))**p
-            self.noise_generator = lambda: pareto_noise(self.alpha)
+            pareto_noise = ParetoNoise(alpha=p+0.05, scale=scale, p=p, both_side=both_side)
+            self.nu = np.max((pareto_noise.nu_p**(1./p) + np.abs(means - pareto_noise.mean))**p)
+            self.noise_generator = lambda : pareto_noise.sample()
+            
     def get_observations(self):
         return [mean + self.scale*self.noise_generator() for mean in self.means]

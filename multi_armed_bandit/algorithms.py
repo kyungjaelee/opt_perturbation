@@ -6,11 +6,13 @@ from estimation.robust_estimator import SampleMean, TruncatedMean, MedianofMean,
 from utils.custom_distribution import random_GEV
 
 class MAB_model:
-    def __init__(self, K, p, nu, estimator_type='TruncatedMean'):
+    def __init__(self, T, K, p, nu, estimator_type='TruncatedMean', name='MAB_algorithm'):
         # Number of arms
+        self.T = T
         self.K = K
         self.p = p
         self.nu = nu
+        self.name = name
 
         self.estimator_type = estimator_type        
         if estimator_type == 'SampleMean':
@@ -32,18 +34,10 @@ class MAB_model:
         raise NotImplementedError
 
 class RobustUCB(MAB_model):
-    def __init__(self, K, p, nu, c=1.0, estimator_type='TruncatedMean'):
-        MAB_model.__init__(self, K, p, nu, estimator_type)
+    def __init__(self, T, K, p, nu, c=1.0, estimator_type='TruncatedMean'):
+        MAB_model.__init__(self, T, K, p, nu, estimator_type, 'Robust UCB')
         
         self.c = c
-#         if self.estimator_type == 'SampleMean':
-#             self.eta = 1.0
-#             self.u = nu
-#             self.b0 = 0.0
-#         elif self.estimator_type == 'WeaklyRobustMean':
-#             self.eta = 1.0
-#             self.u = nu
-#             self.b0 = 0.0
         if self.estimator_type == 'TruncatedMean':
             self.eta = 4.**(self.p/(self.p-1.))
             self.u = nu
@@ -74,8 +68,8 @@ class RobustUCB(MAB_model):
                 estimator.update_delta(np.maximum((step+1.)**(-2.),1e-4))
 
 class DSEE(MAB_model):
-    def __init__(self, K, p, nu, c=1.0, estimator_type='TruncatedMean'):
-        MAB_model.__init__(self, K, p, nu, estimator_type)
+    def __init__(self, T, K, p, nu, c=1.0, estimator_type='TruncatedMean'):
+        MAB_model.__init__(self, T, K, p, nu, estimator_type, 'DSEE')
         self.exploration_n = 0
         
         self.c = c
@@ -96,7 +90,7 @@ class DSEE(MAB_model):
                 estimator.update_delta(np.maximum(np.exp(-estimator.n/self.w),1e-6))
 
 class GSR():
-    def __init__(self, K, p, nu, T=20000, q=0.5):
+    def __init__(self, T, K, p, nu, q=0.5):
         self.nu = nu
         self.p = p
         self.K = K
@@ -108,6 +102,7 @@ class GSR():
         self.curr_phase = 0
         self.curr_idx = 0
         self.q = q
+        self.name = 'DSEE'
     def choose(self, step):
         k = self.curr_phase
         if k < self.K-1:
@@ -135,13 +130,34 @@ class GSR():
             self.sampled_rewards[a,int(self.action_cnt[a])] = r
             self.action_cnt[a] += 1
             
+class ModifiedRobustUCB(MAB_model):
+    def __init__(self, T, K, p, nu, c=1.0, estimator_type='WeaklyRobustMean'):
+        MAB_model.__init__(self, T, K, p, nu, estimator_type, 'MR-UCB')        
+        self.c = c
+        
+    def choose(self, step):
+        if step < self.K:
+            a = step
+        else:
+            confidences = [reward_estimator.predict() +
+                           self.c*np.log(np.maximum(self.T/self.K/reward_estimator.n,1.))/ reward_estimator.n**(1.-1./self.p) for reward_estimator in self.reward_estimators]
+            a = np.argmax(confidences)
+        return a
+    
+    def update(self, a, r, step):
+        self.reward_estimators[a].update(r)
+        if self.estimator_type in ['TruncatedMean','MedianofMean','CatoniMean']:
+            for estimator in self.reward_estimators:
+                estimator.update_delta(np.maximum((step+1.)**(-2.),1e-4))
+            
 class APE(MAB_model):
-    def __init__(self, K, p, nu, c=1.0, estimator_type='WeaklyRobustMean', perturbation={'perturbation_type':'Pareto','params':{'alpha':4.,'scale':1.}}):
-        MAB_model.__init__(self, K, p, nu, estimator_type)
+    def __init__(self, T, K, p, nu, c=1.0, c_est=100000., estimator_type='WeaklyRobustMean', perturbation={'perturbation_type':'Pareto','params':{'alpha':4.,'scale':1.}}):
+        MAB_model.__init__(self, T, K, p, nu, estimator_type, 'APE-'+perturbation['perturbation_type'])
         self.c=c
         for reward_estimator in self.reward_estimators:
-            reward_estimator._c = c
+            reward_estimator._c = c_est
         
+        self.perturbation = perturbation
         if perturbation['perturbation_type'] == 'Weibull':
             alpha = perturbation['params']['k']
             scale = perturbation['params']['scale']
@@ -162,13 +178,18 @@ class APE(MAB_model):
             zeta = perturbation['params']['zeta']
             scale = perturbation['params']['scale']
             self.perturbations = [lambda : random_GEV(zeta)*scale for _ in range(K)]
+        elif perturbation['perturbation_type'] == 'Bounded':
+            self.perturbations = [lambda : 2.*np.random.uniform() - 1. for _ in range(K)]
            
     def choose(self, step):
         if step < self.K:
             a = step
         else:
-            confidences = [reward_estimator.predict() +
-                           self.c*perturbation()/(reward_estimator.n**(1.-1./self.p)) for reward_estimator,perturbation in zip(self.reward_estimators,self.perturbations)]
+            if self.perturbation['perturbation_type'] == 'Bounded':
+                confidences = [reward_estimator.predict() + self.c*perturbation()*np.log(np.maximum(self.T/self.K/reward_estimator.n,1.))/(reward_estimator.n**(1.-1./self.p)) for reward_estimator,perturbation in zip(self.reward_estimators,self.perturbations)]
+            else:
+                confidences = [reward_estimator.predict() + self.c*perturbation()/(reward_estimator.n**(1.-1./self.p)) for reward_estimator,perturbation in zip(self.reward_estimators,self.perturbations)]
+                
             a = np.argmax(confidences)
         return a
     

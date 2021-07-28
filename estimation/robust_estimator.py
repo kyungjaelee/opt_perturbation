@@ -107,7 +107,7 @@ def _cal_ap(p):
     if p == 2:
         return 1./2.
     else:
-        ap = (2.*(((2.-p)/(p-1.)) ** (1.-(2./p))) + ((2.-p)/(p-1))**(2.-(2./p))) **(-p/2.)
+        ap = (2.*(((2.-p)/(p-1.)) ** (1.-(2./p))) + ((2.-p)/(p-1.))**(2.-(2./p))) **(-p/2.)
         return ap
 
 def _cal_psi(x, p):
@@ -145,10 +145,11 @@ class CatoniMean(RobustEstimator):
         sol = scipy.optimize.root_scalar(remainder,x0=0.,x1=10.0)
         self.y_hat = sol.root        
         self.n = n
+        
     def update_delta(self,new_delta):
         self._delta=new_delta
         
-# Weakly Robust Mean estimator
+# p Robust Mean estimator
 class WeaklyRobustMean(RobustEstimator):
     def __init__(self,nu,p,c=1.0):
         RobustEstimator.__init__(self,nu,p)

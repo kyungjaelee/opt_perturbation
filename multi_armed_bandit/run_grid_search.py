@@ -12,7 +12,7 @@ parser.add_argument('--scale', metavar='s', type=float, default=1.0, help='Scale
 parser.add_argument('--mean', metavar='m', type=str, default='one_hot', choices=['one_hot', 'random', 'sequence'], help='True mean')
 parser.add_argument('--gap', metavar='g', type=float, default=0.1, help='Gap')
 parser.add_argument('--seed', metavar='i', type=int, default=1, help='A random seed')
-parser.add_argument('--samples', metavar='n', type=int, default=30000, help='Samples')
+parser.add_argument('--samples', metavar='n', type=int, default=50000, help='Samples')
 parser.add_argument('--arms', metavar='K', type=int, default=100, help='The munber of arms')
 parser.add_argument('--algo', metavar='alg', type=str, default='ape-pareto', help='Algorithm')
 
@@ -46,20 +46,12 @@ algos = []
 algos_name = []
 algos_type = args.algo
 if algos_type == 'ape-weibull':
-    c_list = np.linspace(0.1,5.,50)
+    c_list = 10**np.linspace(-3.,2.,50)
     for i in range(len(c_list)):
         algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Weibull','params':{'k':1.0,'scale':1.0}}))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},k:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],1.0,1.0))
-    c_list = np.linspace(0.01,0.1,10)
-    for i in range(len(c_list)):
-        algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Weibull','params':{'k':1.0,'scale':1.0}}))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},k:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],1.0,1.0))
-    algos.append(APE(K, q, nu, c=0.005, perturbation={'perturbation_type':'Weibull','params':{'k':1.0,'scale':1.0}}))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},k:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.005,1.0,1.0))
-    algos.append(APE(K, q, nu, c=0.001, perturbation={'perturbation_type':'Weibull','params':{'k':1.0,'scale':1.0}}))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},k:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.001,1.0,1.0))
 elif algos_type == 'ape-frechet':
-    c_list = np.linspace(0.1,5.,50)
+    c_list = 10**np.linspace(-3.,2.,50)
     for i in range(len(c_list)):
         if p**2./(p-1.) > np.log(K):
             algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Frechet','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
@@ -67,27 +59,8 @@ elif algos_type == 'ape-frechet':
         else:
             algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Frechet','params':{'alpha':np.log(K),'scale':np.log(K)}}))
             algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],np.log(K),np.log(K)))
-    c_list = np.linspace(0.01,0.1,10)
-    for i in range(len(c_list)):
-        if p**2./(p-1.) > np.log(K):
-            algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Frechet','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
-            algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],p**2./(p-1.),1.0))
-        else:
-            algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Frechet','params':{'alpha':np.log(K),'scale':np.log(K)}}))
-            algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],np.log(K),np.log(K)))
-            
-    if p**2./(p-1.) > np.log(K):
-        algos.append(APE(K, q, nu, c=0.005, perturbation={'perturbation_type':'Frechet','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.005,p**2./(p-1.),1.0))
-        algos.append(APE(K, q, nu, c=0.001, perturbation={'perturbation_type':'Frechet','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.001,p**2./(p-1.),1.0))
-    else:
-        algos.append(APE(K, q, nu, c=0.005, perturbation={'perturbation_type':'Frechet','params':{'alpha':np.log(K),'scale':np.log(K)}}))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.005,np.log(K),np.log(K)))
-        algos.append(APE(K, q, nu, c=0.001, perturbation={'perturbation_type':'Frechet','params':{'alpha':np.log(K),'scale':np.log(K)}}))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.001,np.log(K),np.log(K)))
 elif algos_type == 'ape-pareto':    
-    c_list = np.linspace(0.1,5.,50)
+    c_list = 10**np.linspace(-3.,2.,50)
     for i in range(len(c_list)):
         if p**2./(p-1.) > np.log(K):
             algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Pareto','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
@@ -95,104 +68,51 @@ elif algos_type == 'ape-pareto':
         else:
             algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Pareto','params':{'alpha':np.log(K),'scale':np.log(K)}}))
             algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],np.log(K),np.log(K)))
-    c_list = np.linspace(0.01,0.1,10)
-    for i in range(len(c_list)):
-        if p**2./(p-1.) > np.log(K):
-            algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Pareto','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
-            algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],p**2./(p-1.),1.0))
-        else:
-            algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Pareto','params':{'alpha':np.log(K),'scale':np.log(K)}}))
-            algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],np.log(K),np.log(K)))
-            
-    if p**2./(p-1.) > np.log(K):
-        algos.append(APE(K, q, nu, c=0.005, perturbation={'perturbation_type':'Pareto','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.005,p**2./(p-1.),1.0))
-        algos.append(APE(K, q, nu, c=0.001, perturbation={'perturbation_type':'Pareto','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.001,p**2./(p-1.),1.0))
-    else:
-        algos.append(APE(K, q, nu, c=0.005, perturbation={'perturbation_type':'Pareto','params':{'alpha':np.log(K),'scale':np.log(K)}}))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.005,np.log(K),np.log(K)))
-        algos.append(APE(K, q, nu, c=0.001, perturbation={'perturbation_type':'Pareto','params':{'alpha':np.log(K),'scale':np.log(K)}}))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.001,np.log(K),np.log(K)))
 elif algos_type == 'ape-gamma':
-    c_list = np.linspace(0.1,5.,50)
+    c_list = 10**np.linspace(-3.,2.,50)
     for i in range(len(c_list)):
         algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Gamma','params':{'alpha':1.0,'scale':1.0}}))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],1.0,1.0))
-    c_list = np.linspace(0.01,0.1,10)
-    for i in range(len(c_list)):
-        algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Gamma','params':{'alpha':1.0,'scale':1.0}}))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],1.0,1.0))
-    algos.append(APE(K, q, nu, c=0.005, perturbation={'perturbation_type':'Gamma','params':{'alpha':1.0,'scale':1.0}}))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.005,1.0,1.0))
-    algos.append(APE(K, q, nu, c=0.001, perturbation={'perturbation_type':'Gamma','params':{'alpha':1.0,'scale':1.0}}))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.001,1.0,1.0))
 elif algos_type == 'ape-GEV':    
-    c_list = np.linspace(0.1,5.,50)
+    c_list = 10**np.linspace(-3.,2.,50)
     for i in range(len(c_list)):
         algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'GEV','params':{'zeta':0.0,'scale':1.0}}))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\zeta$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],0.0,1.0))
-    c_list = np.linspace(0.01,0.1,10)
+elif algos_type == 'ape-bounded':  
+    c_list = 10**np.linspace(-3.,2.,50)             
     for i in range(len(c_list)):
-        algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'GEV','params':{'zeta':0.0,'scale':1.0}}))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\zeta$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],0.0,1.0))
-    algos.append(APE(K, q, nu, c=0.005, perturbation={'perturbation_type':'GEV','params':{'zeta':0.0,'scale':1.0}}))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\zeta$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.005,0.0,1.0))
-    algos.append(APE(K, q, nu, c=0.001, perturbation={'perturbation_type':'GEV','params':{'zeta':0.0,'scale':1.0}}))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\zeta$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,0.001,0.0,1.0))
+        algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Bounded','params':{}}))
+        algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
 elif algos_type == 'ucb-truncated-mean':  
-    c_list = np.linspace(0.1,5.,50)               
+    c_list = 10**np.linspace(-3.,2.,50)          
     for i in range(len(c_list)):
         algos.append(RobustUCB(K, q, nu, c=c_list[i], estimator_type='TruncatedMean'))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
-    c_list = np.linspace(0.01,0.1,10)               
-    for i in range(len(c_list)):
-        algos.append(RobustUCB(K, q, nu, c=c_list[i], estimator_type='TruncatedMean'))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
-    algos.append(RobustUCB(K, q, nu, c=0.005, estimator_type='TruncatedMean'))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,0.005,nu))
-    algos.append(RobustUCB(K, q, nu, c=0.001, estimator_type='TruncatedMean'))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,0.001,nu))
-elif algos_type == 'ucb-catoni-mean':     
-    c_list = np.linspace(0.1,5.,50)            
+elif algos_type == 'ucb-catoni-mean': 
+    c_list = 10**np.linspace(-3.,2.,50)             
     for i in range(len(c_list)):
         algos.append(RobustUCB(K, q, nu, c=c_list[i], estimator_type='CatoniMean'))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
-    c_list = np.linspace(0.01,0.1,10)            
-    for i in range(len(c_list)):
-        algos.append(RobustUCB(K, q, nu, c=c_list[i], estimator_type='CatoniMean'))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
-elif algos_type == 'ucb-median-of-mean':     
-    c_list = np.linspace(0.1,5.,50)            
+elif algos_type == 'ucb-median-of-mean':  
+    c_list = 10**np.linspace(-3.,2.,50)         
     for i in range(len(c_list)):
         algos.append(RobustUCB(K, q, nu, c=c_list[i], estimator_type='MedianofMean'))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
-elif algos_type == 'dsee':
-    c_list = np.linspace(0.1,5.,50)                 
+elif algos_type == 'mr-ucb':           
+    c_list = 10**np.linspace(-3.,2.,50)             
+    for i in range(len(c_list)):
+        algos.append(ModifiedRobustUCB(samples, K, q, nu, c=c_list[i]))
+        algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
+elif algos_type == 'dsee': 
+    c_list = 10**np.linspace(-3.,2.,50)                 
     for i in range(len(c_list)):
         algos.append(DSEE(K, q, nu, c=c_list[i], estimator_type='TruncatedMean'))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
-    c_list = np.linspace(0.01,0.1,10)                 
-    for i in range(len(c_list)):
-        algos.append(DSEE(K, q, nu, c=c_list[i], estimator_type='TruncatedMean'))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
-    algos.append(DSEE(K, q, nu, c=0.005, estimator_type='TruncatedMean'))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,0.005,nu))
-    algos.append(DSEE(K, q, nu, c=0.001, estimator_type='TruncatedMean'))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,0.001,nu))
 elif algos_type == 'gsr':
-    c_list = np.linspace(0.02,1.0,50)                 
+    c_list = 10**np.linspace(-3.,2.,50)                 
     for i in range(len(c_list)):
         algos.append(GSR(K, q, nu, T=samples, q=c_list[i]))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
-    c_list = np.linspace(0.002,0.02,10)                 
-    for i in range(len(c_list)):
-        algos.append(GSR(K, q, nu, T=samples, q=c_list[i]))
-        algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
-    algos.append(GSR(K, q, nu, T=samples, q=0.005))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,0.005,nu))
-    algos.append(GSR(K, q, nu, T=samples, q=0.0001))
-    algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,0.0001,nu))
                              
 total_regret_list = [[] for _ in range(len(algos))]
 agv_regret_list = [[] for _ in range(len(algos))]

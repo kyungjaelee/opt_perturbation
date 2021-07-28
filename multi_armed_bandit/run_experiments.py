@@ -49,31 +49,37 @@ algos = []
 algos_name = []
 algos_type = args.algo
 if algos_type == 'ape-weibull':
-    algos.append(APE(K, q, nu, c=c, perturbation={'perturbation_type':'Weibull','params':{'k':1.0,'scale':1.0}}))
+    algos.append(APE(samples, K, q, nu, c=c, perturbation={'perturbation_type':'Weibull','params':{'k':1.0,'scale':1.0}}))
     algos_name.append("APE-Exp")
 elif algos_type == 'ape-frechet':
-    algos.append(APE(K, q, nu, c=c, perturbation={'perturbation_type':'Frechet','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
+    algos.append(APE(samples, K, q, nu, c=c, perturbation={'perturbation_type':'Frechet','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
     algos_name.append("APE-Frechet")
 elif algos_type == 'ape-pareto':
-    algos.append(APE(K, q, nu, c=c, perturbation={'perturbation_type':'Pareto','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
+    algos.append(APE(samples, K, q, nu, c=c, perturbation={'perturbation_type':'Pareto','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
     algos_name.append("APE-Pareto")
 elif algos_type == 'ape-gamma':
-    algos.append(APE(K, q, nu, c=c, perturbation={'perturbation_type':'Gamma','params':{'alpha':1.0,'scale':1.0}}))
+    algos.append(APE(samples, K, q, nu, c=c, perturbation={'perturbation_type':'Gamma','params':{'alpha':1.0,'scale':1.0}}))
     algos_name.append("APE-Gamma")
 elif algos_type == 'ape-GEV':
-    algos.append(APE(K, q, nu, c=c, perturbation={'perturbation_type':'GEV','params':{'zeta':0.0,'scale':1.0}}))
+    algos.append(APE(samples, K, q, nu, c=c, perturbation={'perturbation_type':'GEV','params':{'zeta':0.0,'scale':1.0}}))
     algos_name.append("APE-GEV")
+elif algos_type == 'ape-bounded':
+    algos.append(APE(samples, K, q, nu, c=c, perturbation={'perturbation_type':'Bounded','params':{}}))
+    algos_name.append("APE-Bounded")
 elif algos_type == 'ucb-truncated-mean':  
-    algos.append(RobustUCB(K, q, nu, c=c, estimator_type='TruncatedMean'))
+    algos.append(RobustUCB(samples, K, q, nu, c=c, estimator_type='TruncatedMean'))
     algos_name.append("RobustUCB-Truncated-Mean")
 elif algos_type == 'ucb-median-of-mean':  
-    algos.append(RobustUCB(K, q, nu, c=c, estimator_type='MedianofMean'))
+    algos.append(RobustUCB(samples, K, q, nu, c=c, estimator_type='MedianofMean'))
     algos_name.append("RobustUCB-Median-of-Mean")
+elif algos_type == 'mr-ucb':  
+    algos.append(ModifiedRobustUCB(samples, K, q, nu, c=c))
+    algos_name.append("ModifiedRobustUCB")
 elif algos_type == 'dsee':
-    algos.append(DSEE(K, q, nu, c=c, estimator_type='TruncatedMean'))
+    algos.append(DSEE(samples, K, q, nu, c=c, estimator_type='TruncatedMean'))
     algos_name.append("DSEE")
 elif algos_type == 'gsr':
-    algos.append(GSR(K, q, nu, T=samples, q=c))
+    algos.append(GSR(samples, K, q, nu, T=samples, q=c))
     algos_name.append("GSR")
                              
 total_regret_list = [[] for _ in range(len(algos))]
