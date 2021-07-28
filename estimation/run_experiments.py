@@ -3,7 +3,7 @@ import numpy as np
 from scipy.special import gamma
 
 from estimation.robust_estimator import SampleMean, TruncatedMean, MedianofMean, CatoniMean, WeaklyRobustMean
-from estimation.heavy_tail_observations import weibull_observation, frechet_observation, pareto_observation, gaussian_observation
+from estimation. heavy_tail_observations import WeibullNoise, FrechetNoise, ParetoNoise
 
 parser = argparse.ArgumentParser(description="Run experiments on various robust mean estimators under heavy tailed noise")
 parser.add_argument('--noise', metavar='dist', type=str, default='weibull', choices=['weibull', 'frechet', 'pareto'], help='A type of noise')
