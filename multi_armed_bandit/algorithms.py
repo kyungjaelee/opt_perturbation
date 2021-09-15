@@ -18,13 +18,13 @@ class MAB_model:
         if estimator_type == 'SampleMean':
             estimators = [SampleMean(nu, p) for _ in range(K)]
         elif estimator_type == 'TruncatedMean':
-            estimators = [TruncatedMean(nu, p, delta=1.0, schedule=False) for _ in range(K)]
+            estimators = [TruncatedMean(nu, p, delta=1.0, schedule=True) for _ in range(K)]
         elif estimator_type == 'MedianofMean':
-            estimators = [MedianofMean(nu, p, delta=1.0, schedule=False) for _ in range(K)]
+            estimators = [MedianofMean(nu, p, delta=1.0, schedule=True) for _ in range(K)]
         elif estimator_type == 'CatoniMean':
-            estimators = [CatoniMean(nu, p, delta=1.0, schedule=False) for _ in range(K)]
+            estimators = [CatoniMean(nu, p, delta=1.0, schedule=True) for _ in range(K)]
         elif estimator_type == 'WeaklyRobustMean':
-            estimators = [WeaklyRobustMean(nu, p) for _ in range(K)]
+            estimators = [WeaklyRobustMean(nu, p, c=0.1) for _ in range(K)]
         self.reward_estimators = estimators
         
     def choose(self, step):

@@ -2,7 +2,7 @@ import argparse
 import numpy as np
 
 from multi_armed_bandit.reward_functions import Rewards
-from multi_armed_bandit.algorithms import RobustUCB, APE, DSEE, GSR
+from multi_armed_bandit.algorithms import RobustUCB, APE, DSEE, GSR, ModifiedRobustUCB
 
 parser = argparse.ArgumentParser(description="Run experiments on various robust mean estimators under heavy tailed noise")
 parser.add_argument('--noise', metavar='dist', type=str, default='pareto', choices=['weibull', 'frechet', 'pareto', 'gaussian'], help='A type of noise')
@@ -48,35 +48,35 @@ algos_type = args.algo
 if algos_type == 'ape-weibull':
     c_list = 10**np.linspace(-3.,2.,50)
     for i in range(len(c_list)):
-        algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Weibull','params':{'k':1.0,'scale':1.0}}))
+        algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Weibull','params':{'k':1.0,'scale':1.0}}))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},k:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],1.0,1.0))
 elif algos_type == 'ape-frechet':
     c_list = 10**np.linspace(-3.,2.,50)
     for i in range(len(c_list)):
         if p**2./(p-1.) > np.log(K):
-            algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Frechet','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
+            algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Frechet','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
             algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],p**2./(p-1.),1.0))
         else:
-            algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Frechet','params':{'alpha':np.log(K),'scale':np.log(K)}}))
+            algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Frechet','params':{'alpha':np.log(K),'scale':np.log(K)}}))
             algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],np.log(K),np.log(K)))
 elif algos_type == 'ape-pareto':    
     c_list = 10**np.linspace(-3.,2.,50)
     for i in range(len(c_list)):
         if p**2./(p-1.) > np.log(K):
-            algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Pareto','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
+            algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Pareto','params':{'alpha':p**2./(p-1.),'scale':1.0}}))
             algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],p**2./(p-1.),1.0))
         else:
-            algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Pareto','params':{'alpha':np.log(K),'scale':np.log(K)}}))
+            algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Pareto','params':{'alpha':np.log(K),'scale':np.log(K)}}))
             algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],np.log(K),np.log(K)))
 elif algos_type == 'ape-gamma':
     c_list = 10**np.linspace(-3.,2.,50)
     for i in range(len(c_list)):
-        algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Gamma','params':{'alpha':1.0,'scale':1.0}}))
+        algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Gamma','params':{'alpha':1.0,'scale':1.0}}))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\alpha$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],1.0,1.0))
 elif algos_type == 'ape-GEV':    
     c_list = 10**np.linspace(-3.,2.,50)
     for i in range(len(c_list)):
-        algos.append(APE(K, q, nu, c=c_list[i], perturbation={'perturbation_type':'GEV','params':{'zeta':0.0,'scale':1.0}}))
+        algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'GEV','params':{'zeta':0.0,'scale':1.0}}))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\zeta$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],0.0,1.0))
 elif algos_type == 'ape-bounded':  
     c_list = 10**np.linspace(-3.,2.,50)             
@@ -86,17 +86,17 @@ elif algos_type == 'ape-bounded':
 elif algos_type == 'ucb-truncated-mean':  
     c_list = 10**np.linspace(-3.,2.,50)          
     for i in range(len(c_list)):
-        algos.append(RobustUCB(K, q, nu, c=c_list[i], estimator_type='TruncatedMean'))
+        algos.append(RobustUCB(samples, K, q, nu, c=c_list[i], estimator_type='TruncatedMean'))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
 elif algos_type == 'ucb-catoni-mean': 
     c_list = 10**np.linspace(-3.,2.,50)             
     for i in range(len(c_list)):
-        algos.append(RobustUCB(K, q, nu, c=c_list[i], estimator_type='CatoniMean'))
+        algos.append(RobustUCB(samples, K, q, nu, c=c_list[i], estimator_type='CatoniMean'))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
 elif algos_type == 'ucb-median-of-mean':  
     c_list = 10**np.linspace(-3.,2.,50)         
     for i in range(len(c_list)):
-        algos.append(RobustUCB(K, q, nu, c=c_list[i], estimator_type='MedianofMean'))
+        algos.append(RobustUCB(samples, K, q, nu, c=c_list[i], estimator_type='MedianofMean'))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
 elif algos_type == 'mr-ucb':           
     c_list = 10**np.linspace(-3.,2.,50)             
@@ -106,12 +106,12 @@ elif algos_type == 'mr-ucb':
 elif algos_type == 'dsee': 
     c_list = 10**np.linspace(-3.,2.,50)                 
     for i in range(len(c_list)):
-        algos.append(DSEE(K, q, nu, c=c_list[i], estimator_type='TruncatedMean'))
+        algos.append(DSEE(samples, K, q, nu, c=c_list[i], estimator_type='TruncatedMean'))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
 elif algos_type == 'gsr':
     c_list = 10**np.linspace(-3.,2.,50)                 
     for i in range(len(c_list)):
-        algos.append(GSR(K, q, nu, T=samples, q=c_list[i]))
+        algos.append(GSR(samples, K, q, nu, T=samples, q=c_list[i]))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
                              
 total_regret_list = [[] for _ in range(len(algos))]
@@ -135,7 +135,7 @@ for step in range(samples):
         action_cnt[alg_idx][a]+=1
         
 if mean_type == 'one_hot':
-    filename = 'multi_armed_bandit_results/{:}-{:}-{:}-p{:.2f}-s{:.2f}-g{:.2f}-K{:d}-size{:d}-seed{:d}.npy'.format(mean_type,noise_type,algos_type,p,scale,gap,K,samples,seed)
+    filename = 'multi_armed_bandit_results/grid_search_{:}-{:}-{:}-p{:.2f}-s{:.2f}-g{:.2f}-K{:d}-size{:d}-seed{:d}.npy'.format(mean_type,noise_type,algos_type,p,scale,gap,K,samples,seed)
     
 with open(filename,'wb') as f:
     np.savez(f, 

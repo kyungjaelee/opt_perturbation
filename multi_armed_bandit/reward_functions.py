@@ -3,7 +3,7 @@ from scipy.special import gamma
 from estimation.heavy_tail_observations import WeibullNoise, FrechetNoise, ParetoNoise
 
 class Rewards():
-    def __init__(self,means,p,scale,noise_type='pareto',both_side=False):
+    def __init__(self,means,p,scale,noise_type='pareto',both_side=True):
         self.K = len(means)
         self.means = means
         self.scale = scale
