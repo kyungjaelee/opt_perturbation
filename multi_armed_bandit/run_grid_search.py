@@ -78,10 +78,15 @@ elif algos_type == 'ape-GEV':
     for i in range(len(c_list)):
         algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'GEV','params':{'zeta':0.0,'scale':1.0}}))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},$\\zeta$:{:.2f},$\\lambda$:{:.2f})".format(algos_type,q,c_list[i],0.0,1.0))
-elif algos_type == 'ape-bounded':  
+elif algos_type == 'ape-uniform':  
     c_list = 10**np.linspace(-3.,2.,50)             
     for i in range(len(c_list)):
-        algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Bounded','params':{}}))
+        algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Uniform','params':{}}))
+        algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
+elif algos_type == 'ape-rademacher':  
+    c_list = 10**np.linspace(-3.,2.,50)             
+    for i in range(len(c_list)):
+        algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Rademacher','params':{}}))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
 elif algos_type == 'ucb-truncated-mean':  
     c_list = 10**np.linspace(-3.,2.,50)          

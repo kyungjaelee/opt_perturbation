@@ -63,8 +63,8 @@ elif algos_type == 'ape-gamma':
 elif algos_type == 'ape-GEV':
     algos.append(APE(samples, K, q, nu, c=c, perturbation={'perturbation_type':'GEV','params':{'zeta':0.0,'scale':1.0}}))
     algos_name.append("APE-GEV")
-elif algos_type == 'ape-bounded':
-    algos.append(APE(samples, K, q, nu, c=c, perturbation={'perturbation_type':'Bounded','params':{}}))
+elif algos_type == 'ape-uniform':
+    algos.append(APE(samples, K, q, nu, c=c, perturbation={'perturbation_type':'Uniform','params':{}}))
     algos_name.append("APE-Bounded")
 elif algos_type == 'ucb-truncated-mean':  
     algos.append(RobustUCB(samples, K, q, nu, c=c, estimator_type='TruncatedMean'))

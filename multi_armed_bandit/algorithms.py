@@ -178,8 +178,10 @@ class APE(MAB_model):
             zeta = perturbation['params']['zeta']
             scale = perturbation['params']['scale']
             self.perturbations = [lambda : random_GEV(zeta)*scale for _ in range(K)]
-        elif perturbation['perturbation_type'] == 'Bounded':
+        elif perturbation['perturbation_type'] == 'Uniform':
             self.perturbations = [lambda : 2.*np.random.uniform() - 1. for _ in range(K)]
+        elif perturbation['perturbation_type'] == 'Rademacher':
+            self.perturbations = [lambda : 2.*np.random.binomial(1, 0.5) - 1. for _ in range(K)]
            
     def choose(self, step):
         if step < self.K:
