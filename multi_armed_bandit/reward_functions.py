@@ -12,11 +12,11 @@ class Rewards():
             self.nu = np.max((weibull_noise.nu_p**(1./p) + np.abs(means - weibull_noise.mean))**p)
             self.noise_generator = lambda : weibull_noise.sample()
         elif noise_type == 'frechet':
-            frechet_noise = FrechetNoise(alpha=p+0.05, scale=scale, p=p, both_side=both_side)
+            frechet_noise = FrechetNoise(alpha=p+0.1, scale=scale, p=p, both_side=both_side)
             self.nu = np.max((frechet_noise.nu_p**(1./p) + np.abs(means - frechet_noise.mean))**p)
             self.noise_generator = lambda : frechet_noise.sample()
         elif noise_type == 'pareto':
-            pareto_noise = ParetoNoise(alpha=p+0.05, scale=scale, p=p, both_side=both_side)
+            pareto_noise = ParetoNoise(alpha=p+0.1, scale=scale, p=p, both_side=both_side)
             self.nu = np.max((pareto_noise.nu_p**(1./p) + np.abs(means - pareto_noise.mean))**p)
             self.noise_generator = lambda : pareto_noise.sample()
             

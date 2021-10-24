@@ -187,7 +187,7 @@ class APE(MAB_model):
         if step < self.K:
             a = step
         else:
-            if self.perturbation['perturbation_type'] == 'Bounded':
+            if (self.perturbation['perturbation_type'] == 'Uniform') or (self.perturbation['perturbation_type'] == 'Rademacher'):
                 confidences = [reward_estimator.predict() + self.c*perturbation()*np.log(np.maximum(self.T/self.K/reward_estimator.n,1.))/(reward_estimator.n**(1.-1./self.p)) for reward_estimator,perturbation in zip(self.reward_estimators,self.perturbations)]
             else:
                 confidences = [reward_estimator.predict() + self.c*perturbation()/(reward_estimator.n**(1.-1./self.p)) for reward_estimator,perturbation in zip(self.reward_estimators,self.perturbations)]
