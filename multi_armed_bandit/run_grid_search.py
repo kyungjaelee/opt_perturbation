@@ -88,6 +88,16 @@ elif algos_type == 'ape-rademacher':
     for i in range(len(c_list)):
         algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Rademacher','params':{}}))
         algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
+elif algos_type == 'ape-rademacher2':  
+    c_list = 10**np.linspace(-3.,2.,50)             
+    for i in range(len(c_list)):
+        algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Rademacher2','params':{}}))
+        algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
+elif algos_type == 'ape-rademacher3':  
+    c_list = 10**np.linspace(-3.,2.,50)             
+    for i in range(len(c_list)):
+        algos.append(APE(samples, K, q, nu, c=c_list[i], perturbation={'perturbation_type':'Rademacher3','params':{}}))
+        algos_name.append("{:}(q:{:.1f},c:{:.4f},u:{:.2f})".format(algos_type,q,c_list[i],nu))
 elif algos_type == 'ucb-truncated-mean':  
     c_list = 10**np.linspace(-3.,2.,50)          
     for i in range(len(c_list)):

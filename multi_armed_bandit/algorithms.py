@@ -24,7 +24,7 @@ class MAB_model:
         elif estimator_type == 'CatoniMean':
             estimators = [CatoniMean(nu, p, delta=1.0, schedule=True) for _ in range(K)]
         elif estimator_type == 'WeaklyRobustMean':
-            estimators = [WeaklyRobustMean(nu, p, c=0.1) for _ in range(K)]
+            estimators = [WeaklyRobustMean(nu, p, c=1.0) for _ in range(K)]
         self.reward_estimators = estimators
         
     def choose(self, step):
@@ -134,6 +134,8 @@ class ModifiedRobustUCB(MAB_model):
     def __init__(self, T, K, p, nu, c=1.0, estimator_type='WeaklyRobustMean'):
         MAB_model.__init__(self, T, K, p, nu, estimator_type, 'MR-UCB')        
         self.c = c
+        for reward_estimator in self.reward_estimators:
+            reward_estimator._c = 0.1
         
     def choose(self, step):
         if step < self.K:
@@ -146,16 +148,13 @@ class ModifiedRobustUCB(MAB_model):
     
     def update(self, a, r, step):
         self.reward_estimators[a].update(r)
-        if self.estimator_type in ['TruncatedMean','MedianofMean','CatoniMean']:
-            for estimator in self.reward_estimators:
-                estimator.update_delta(np.maximum((step+1.)**(-2.),1e-4))
             
 class APE(MAB_model):
-    def __init__(self, T, K, p, nu, c=1.0, c_est=100000., estimator_type='WeaklyRobustMean', perturbation={'perturbation_type':'Pareto','params':{'alpha':4.,'scale':1.}}):
+    def __init__(self, T, K, p, nu, c=1.0, estimator_type='WeaklyRobustMean', perturbation={'perturbation_type':'Pareto','params':{'alpha':4.,'scale':1.}}):
         MAB_model.__init__(self, T, K, p, nu, estimator_type, 'APE-'+perturbation['perturbation_type'])
         self.c=c
         for reward_estimator in self.reward_estimators:
-            reward_estimator._c = c_est
+            reward_estimator._c = c
         
         self.perturbation = perturbation
         if perturbation['perturbation_type'] == 'Weibull':
@@ -179,16 +178,21 @@ class APE(MAB_model):
             scale = perturbation['params']['scale']
             self.perturbations = [lambda : random_GEV(zeta)*scale for _ in range(K)]
         elif perturbation['perturbation_type'] == 'Uniform':
-            self.perturbations = [lambda : 2.*np.random.uniform() - 1. for _ in range(K)]
+            self.perturbations = [lambda : np.random.uniform() for _ in range(K)]
         elif perturbation['perturbation_type'] == 'Rademacher':
-            self.perturbations = [lambda : 2.*np.random.binomial(1, 0.5) - 1. for _ in range(K)]
+            self.perturbations = [lambda : np.random.binomial(1, 0.5) for _ in range(K)]
+        elif perturbation['perturbation_type'] == 'Rademacher2':
+            self.perturbations = [lambda : 2.*np.random.uniform() - 1. for _ in range(K)]
+        elif perturbation['perturbation_type'] == 'Rademacher3':
+            self.perturbations = [lambda : 2.*np.random.binomial(1, 0.5) - 1.  for _ in range(K)]
            
     def choose(self, step):
         if step < self.K:
             a = step
         else:
-            if (self.perturbation['perturbation_type'] == 'Uniform') or (self.perturbation['perturbation_type'] == 'Rademacher'):
-                confidences = [reward_estimator.predict() + self.c*perturbation()*np.log(np.maximum(self.T/self.K/reward_estimator.n,1.))/(reward_estimator.n**(1.-1./self.p)) for reward_estimator,perturbation in zip(self.reward_estimators,self.perturbations)]
+            if (self.perturbation['perturbation_type'] == 'Uniform') or (self.perturbation['perturbation_type'] == 'Rademacher') or (self.perturbation['perturbation_type'] == 'Rademacher2') or (self.perturbation['perturbation_type'] == 'Rademacher3'):
+                confidences = [reward_estimator.predict() + self.c*2.*perturbation()*np.log(np.maximum(self.T/self.K/reward_estimator.n,1.))/(reward_estimator.n**(1.-1./self.p)) for reward_estimator,perturbation in zip(self.reward_estimators,self.perturbations)]
+#                 if self.perturbation['perturbation_type'] == 'Rademacher3': print(confidences)
             else:
                 confidences = [reward_estimator.predict() + self.c*perturbation()/(reward_estimator.n**(1.-1./self.p)) for reward_estimator,perturbation in zip(self.reward_estimators,self.perturbations)]
                 
